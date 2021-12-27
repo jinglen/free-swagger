@@ -108,9 +108,10 @@ export default {
         if (!newVal) {
           Promise.all([
             this.bindClickEventForController(),
-            this.bindClickEventForModel(),
-            this.injectIconsForApiNodeList()
+            this.bindClickEventForModel()
           ]);
+          // 不为当个按钮注入按钮
+          // this.injectIconsForApiNodeList()
         }
         this.bindApiHandlerForApiNodeList();
       },
@@ -139,11 +140,22 @@ export default {
     async initSwagger() {
       if (state.isNewUi === true || state.swagger) return;
       const configs = window.ui.getConfigs();
-      const url = configs.urls?.[0].url || configs.url;
+      const url = this.getApiDocsUrl(configs);
       if (!url) return;
       const { data } = await axios.get(url);
       if (!state.swagger) {
         return assignSwagger(data, url);
+      }
+    },
+    getApiDocsUrl(configs) {
+      if (configs.urls && configs.urls.length > 0) {
+        const primaryName = new URL(location.href).searchParams.get(
+          "urls.primaryName"
+        );
+        const found = configs.urls.find(url => url.name === primaryName);
+        return found ? found.url : urls[0].url;
+      } else {
+        return configs.url;
       }
     },
     // 给每个 controller 的 tag （展开行的 dom 节点）绑定事件（老版本）
@@ -164,7 +176,8 @@ export default {
       ).forEach(controllerNode =>
         controllerNode.addEventListener("click", e => {
           this.bindApiHandlerForApiNodeList(e.currentTarget);
-          this.injectIconsForApiNodeList(e.currentTarget);
+          // 不为单个文件注入按钮
+          // this.injectIconsForApiNodeList(e.currentTarget);
         })
       );
     },

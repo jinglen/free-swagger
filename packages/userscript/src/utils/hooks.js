@@ -11,7 +11,8 @@ export const assignSwagger = async (swagger, url) => {
   const { state } = await import("@/state");
   try {
     if (!swagger?.swagger) return;
-    ok = true;
+    // TIPS 多个服务存在刷新的要求
+    // ok = true;
     state.swagger = swagger;
     state.url = url;
     state.parsedSwagger = await SwaggerParser.dereference(

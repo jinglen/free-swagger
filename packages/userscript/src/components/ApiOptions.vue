@@ -39,7 +39,6 @@
 
 <script>
 import { state, handleCopyApi } from "@/state";
-import { highlightDOM } from "@/utils/dom-utils";
 import { retry, waitUntil } from "@/utils";
 
 const createIdByHash = hash => {
@@ -60,6 +59,11 @@ const findKeyByHash = hash => {
   return item?.key ?? "";
 };
 
+const findKeyByTargetApi = targetApi => {
+  const item = state.options.find(option => option.path === targetApi);
+  return item?.key ?? "";
+};
+
 export default {
   name: "ApiOptions",
   data: () => ({
@@ -73,21 +77,28 @@ export default {
     async initOption() {
       await waitUntil(() => state.options.length);
       const key = findKeyByHash(location.hash);
+      const targetApi = new URL(location.href).searchParams.get("targetApi");
+      const targetApiKey = findKeyByTargetApi(targetApi);
       if (key) {
         await this.handleSearch(key);
+      } else if (targetApiKey) {
+        await this.handleSearch(targetApiKey);
       }
     },
     findControllerDom({ isNewUi, controller }) {
-      const selector = isNewUi
-        ? `[title="${controller}"]`
-        : `#operations-tag-${controller}`;
-      return document.querySelector(selector);
+      if (isNewUi) {
+        return document.querySelector(`[title="${controller}"]`);
+      } else {
+        const id = `operations-tag-${controller.replace(/\s/g, "_")}`;
+        return document.getElementById(id);
+      }
     },
     findApiDom({ controllerDom, isNewUi, id }) {
-      const selector = isNewUi ? `[data-hashurl$="${id}"]` : `[id$="${id}"]`;
-      return isNewUi
-        ? controllerDom.querySelector(selector)
-        : controllerDom.parentNode.querySelector(selector);
+      if (isNewUi) {
+        return controllerDom.querySelector(`[data-hashurl$="${id}"]`);
+      } else {
+        return document.getElementById(id);
+      }
     },
     openControllerDom(controllerDom, isNewUi) {
       const isOpen = isNewUi
@@ -105,7 +116,7 @@ export default {
         apiDom.click();
       } else {
         apiDom.classList.contains("is-open") ||
-          apiDom.querySelector("button")?.click();
+          apiDom.querySelector("a")?.click();
       }
     },
     // 展开一个 api
@@ -118,13 +129,9 @@ export default {
       if (!controllerDom) return false;
       this.openControllerDom(controllerDom, state.isNewUi);
       await this.$nextTick();
-      const id =
-        operationId ??
-        // 生成默认 id
-        // /a/b/c -> a_b_c
-        `operations-${controller}-${method}_${path
-          .replace(/\//g, "_")
-          .slice(1, path.length)}`;
+      const id = `operations-${controller}-${operationId}`;
+      // 生成默认 id
+      // /a/b/c -> a_b_c
       const apiDom = this.findApiDom({
         isNewUi: state.isNewUi,
         controllerDom,
@@ -137,11 +144,11 @@ export default {
     async handleSearch(key, echo = false) {
       state.key = key;
       state.currentApi = state.options.find(item => item.key === key);
-      handleCopyApi(
-        state.currentApi.path,
-        state.currentApi.method,
-        state.swagger
-      );
+      // handleCopyApi(
+      //   state.currentApi.path,
+      //   state.currentApi.method,
+      //   state.swagger
+      // );
       // 通过 change 事件触发时，显示高亮
       if (!echo) {
         await retry({
@@ -153,7 +160,8 @@ export default {
               // 不设置定时器可能会滚不了。。
               setTimeout(() => {
                 apiDom.scrollIntoView({ behavior: "smooth" });
-                highlightDOM(apiDom, "custom-highlight-anime");
+                // 去掉，影响视觉体验
+                // highlightDOM(apiDom, "custom-highlight-anime");
               });
               return apiDom;
             }
