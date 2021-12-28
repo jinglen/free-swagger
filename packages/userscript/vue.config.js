@@ -4,7 +4,6 @@ const gitRevisionPlugin = new GitRevisionPlugin();
 const webpack = require("webpack");
 const pkg = require("./package.json");
 const UserScriptPlugin = require("./libs/user-script-webpack-plugin");
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
   publicPath:
@@ -35,18 +34,23 @@ module.exports = {
       .options({
         symbolId: "icon-[name]"
       });
-    config.externals({
-      "prettier/standalone": "prettier",
-      "prettier/parser-typescript": "prettierPlugins.typescript",
-      "prettier/parser-babylon": "prettierPlugins.babylon"
-    });
+
+    if (process.env.NODE_ENV !== "development") {
+      config
+        .plugin("webpack-bundle-analyzer")
+        .use(require("webpack-bundle-analyzer").BundleAnalyzerPlugin);
+    }
+    // config.externals({
+    //   "prettier/standalone": "prettier",
+    //   "prettier/parser-typescript": "prettierPlugins.typescript",
+    //   "prettier/parser-babylon": "prettierPlugins.babylon"
+    // });
   },
   configureWebpack: {
     devServer: {
       port: 8888
     },
     plugins: [
-      new MonacoWebpackPlugin(),
       new GitRevisionPlugin({
         commithashCommand: "rev-list --max-count=1 --no-merges HEAD",
         versionCommand: "describe --always --tags",
