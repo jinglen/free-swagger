@@ -20,9 +20,7 @@
     "test:updateSnapshot": "lerna exec -- npm run test -- --updateSnapshot"
   },
   "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint && npm run build && npm run test && git add ."
-    }
+    
   },
   "devDependencies": {
     "husky": "^4.0.0",

@@ -17,6 +17,9 @@ node_modules
 /packages/api/test/__snapshots__/special.test.js.snap
 /packages/api/dist
 
+# userscript
+/packages/userscript/dist
+
 # extension
 /packages/extension/dist
 /packages/extension/artifacts
