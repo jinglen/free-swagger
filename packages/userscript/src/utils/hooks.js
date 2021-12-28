@@ -15,6 +15,8 @@ export const assignSwagger = async (swagger, url) => {
     // ok = true;
     state.swagger = swagger;
     state.url = url;
+    state.basePath = swagger.basePath;
+    state.clearCurrent();
     state.parsedSwagger = await SwaggerParser.dereference(
       cloneDeep(state.swagger)
     );
@@ -25,21 +27,22 @@ export const assignSwagger = async (swagger, url) => {
 };
 
 // ajax hooks
-ah.hookAjax({
-  open(_, xhr) {
-    setTimeout(async () => {
-      await wait();
-      try {
-        if (typeof xhr.response !== "string") return;
-        await assignSwagger(youngParse(xhr.response), xhr.responseURL);
-      } catch (err) {
-        console.error(err);
-        console.error(`JSON.parse 发生错误，请检查 json 是否规范：`);
-        console.log(xhr.response);
-      }
-    }, 500);
-  }
-});
+// 重新请求即可,不需要拦截普通 xhr 请求
+// ah.hookAjax({
+//   open(_, xhr) {
+//     setTimeout(async () => {
+//       await wait();
+//       try {
+//         if (typeof xhr.response !== "string") return;
+//         await assignSwagger(youngParse(xhr.response), xhr.responseURL);
+//       } catch (err) {
+//         console.error(err);
+//         console.error(`JSON.parse 发生错误，请检查 json 是否规范：`);
+//         console.log(xhr.response);
+//       }
+//     }, 500);
+//   }
+// });
 
 // fetch hooks
 window.fetch = new Proxy(fetch, {
@@ -71,7 +74,7 @@ window.fetch = new Proxy(fetch, {
           });
         }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.log(err));
     return response;
   }
 });

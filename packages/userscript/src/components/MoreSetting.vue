@@ -82,8 +82,24 @@
             </el-tooltip>
             模版</span
           >
+
           <!--代码编辑器-->
-          <div id="textarea"></div>
+          <el-input
+            v-show="state.storage.exportLanguage === 'js'"
+            type="textarea"
+            :rows="10"
+            placeholder="请输入内容"
+            v-model="form.jsTemplate"
+          >
+          </el-input>
+          <el-input
+            v-show="state.storage.exportLanguage === 'ts'"
+            type="textarea"
+            :rows="10"
+            placeholder="请输入内容"
+            v-model="form.tsTemplate"
+          >
+          </el-input>
         </el-form-item>
         <el-form-item>
           <div class="btn-container">
@@ -101,7 +117,6 @@ import { Message } from "element-ui";
 import { state } from "@/state";
 import { handleCopyInterface, handleCopyJsDocTypeDef } from "../state";
 import { jsTemplate, tsTemplate } from "free-swagger-core";
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api.js";
 
 export default {
   name: "MoreSetting",
@@ -121,25 +136,8 @@ export default {
       async handler(now) {
         if (now) {
           await this.$nextTick();
-          this.instance = monaco.editor.create(
-            document.querySelector("#textarea"),
-            {
-              value:
-                state.storage.exportLanguage === "js"
-                  ? state.storage.jsTemplate
-                  : state.storage.tsTemplate,
-              theme: "vs-dark",
-              language: "javascript",
-              automaticLayout: true
-            }
-          );
-          this.instance.onDidChangeModelContent(() => {
-            this.handleInput(this.instance.getValue());
-          });
           this.form.jsTemplate = state.storage.jsTemplate;
           this.form.tsTemplate = state.storage.tsTemplate;
-        } else {
-          this.instance?.dispose();
         }
       },
       immediate: true

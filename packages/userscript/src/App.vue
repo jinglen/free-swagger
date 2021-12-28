@@ -7,14 +7,23 @@
       <template v-if="state.options.length">
         <api-options ref="apiOptions"></api-options>
         <div class="operation-container">
-          <el-button type="primary" @click="handleCopyApi()" class="copy-code">
+          <el-button
+            type="primary"
+            @click="handleCopyApi()"
+            :disabled="!state.hasSelected"
+            class="copy-code"
+          >
             <div class="flex justify-center">
               <svg-icon name="copy-white"></svg-icon>
               <span class="ml-3">复制代码块</span>
             </div>
           </el-button>
           <div class="divider"></div>
-          <el-link @click="handleCopyType()" :underline="false">
+          <el-link
+            @click="handleCopyType()"
+            :underline="false"
+            :disabled="!state.hasSelected"
+          >
             <svg-icon name="copy-gray" class="copy"></svg-icon>
             <span class="ml-3">{{
               state.storage.currentLanguage === "js"
@@ -23,15 +32,19 @@
             }}</span>
           </el-link>
           <div class="divider"></div>
-          <el-link @click="handleCopyPath()" :underline="false">
+          <el-link
+            @click="handleCopyPath()"
+            :underline="false"
+            :disabled="!state.hasSelected"
+          >
             <svg-icon name="copy-gray" class="copy"></svg-icon>
             <span class="ml-3">复制url</span>
           </el-link>
-          <div class="divider"></div>
+          <!-- <div class="divider"></div>
           <el-link @click="handleCopyFake()" :underline="false">
             <svg-icon name="copy-gray" class="copy"></svg-icon>
             <span class="ml-3">复制模拟数据</span>
-          </el-link>
+          </el-link> -->
           <div class="divider"></div>
           <div class="switch-container">
             <span class="text">语言</span>
@@ -67,7 +80,7 @@
 </template>
 
 <script>
-import { waitUntil } from "@/utils";
+import { waitUntil, handleTimeoutError, scriptLog } from "@/utils";
 import { state } from "@/state";
 import MoreSetting from "@/components/MoreSetting";
 import ApiOptions from "@/components/ApiOptions";
@@ -127,6 +140,14 @@ export default {
         }, 5000);
       },
       immediate: true
+    },
+    "state.basePath": {
+      handler(newVal, oldVal) {
+        if (newVal && newVal !== oldVal) {
+          this.bindPageListener();
+        }
+      },
+      immediate: true
     }
   },
   methods: {
@@ -136,6 +157,11 @@ export default {
     handleCopyFake,
     handleReload() {
       location.reload();
+    },
+    async bindPageListener() {
+      this.bindClickEventForController();
+      this.bindClickEventForModel();
+      // this.bindApiHandlerForApiNodeList()
     },
     async initSwagger() {
       if (state.isNewUi === true || state.swagger) return;
@@ -161,9 +187,14 @@ export default {
     // 给每个 controller 的 tag （展开行的 dom 节点）绑定事件（老版本）
     async bindClickEventForController() {
       // 确保 DOM 节点存在
-      await waitUntil(
-        () => [...(document.querySelectorAll(".opblock-tag") ?? [])].length
-      );
+      try {
+        await waitUntil(
+          () => [...(document.querySelectorAll(".opblock-tag") ?? [])].length
+        );
+      } catch (error) {
+        handleTimeoutError(error);
+        return;
+      }
       const controllerNodeList = [...document.querySelectorAll(".opblock-tag")];
       // 锚点跳转时给当前锚点的 controller 节点注入 icons
       const [openedControllerNode] = controllerNodeList.filter(node =>
@@ -200,7 +231,15 @@ export default {
     },
     // 给每个 apiNode 绑定点击 api 事件
     async bindApiHandlerForApiNodeList(controllerNode) {
-      const apiNodeList = await this.getApiNodeList(controllerNode);
+      let apiNodeList;
+      // 有可能没有展开的元素
+      try {
+        apiNodeList = await this.getApiNodeList(controllerNode);
+      } catch (error) {
+        apiNodeList = [];
+        scriptLog("没有找到任何展开的 node");
+        handleTimeoutError(error);
+      }
       apiNodeList.forEach(apiNode => {
         apiNode.addEventListener("click", this.apiNodeHandler);
       });
@@ -235,31 +274,17 @@ export default {
         state.key = state.currentApi.key;
       }
     },
-    // 注入 icons（老版本）
-    async injectIconsForApiNodeList(controllerNode) {
-      const apiNodeList = await this.getApiNodeList(controllerNode);
-      apiNodeList.forEach(apiNode => {
-        apiNode.style.position = "relative";
-        const method = apiNode.querySelector(".opblock-summary-method")
-          ?.innerText;
-        const path = apiNode
-          .querySelector(".opblock-summary-path")
-          ?.innerText.replace(/\u200B/g, ""); // 替换零宽空白
-        const summary = apiNode.querySelector(".opblock-summary-description")
-          ?.innerText;
-        if (!method || !path || !summary) return;
-        const apiIconsNode = createApiIconsDom(
-          path,
-          method.toLowerCase(),
-          summary
-        );
-        apiNode.appendChild(apiIconsNode);
-      });
-    },
+
     async modelTagHandler() {
-      await waitUntil(
-        () => [...(document.querySelectorAll(".model-container") ?? [])].length
-      );
+      try {
+        await waitUntil(
+          () =>
+            [...(document.querySelectorAll(".model-container") ?? [])].length
+        );
+      } catch (error) {
+        handleTimeoutError(error);
+        return;
+      }
       const modelNodeList = [...document.querySelectorAll(".model-container")];
       modelNodeList.forEach(node => {
         node.style.position = "relative";
@@ -269,7 +294,12 @@ export default {
     },
     // 给所有 model 绑定 TS icon（复制 interface）（老版本）
     async bindClickEventForModel() {
-      await waitUntil(() => document.querySelector(".models"));
+      try {
+        await waitUntil(() => document.querySelector(".models"));
+      } catch (error) {
+        handleTimeoutError(error);
+        return;
+      }
       document
         .querySelector(".models")
         .firstChild?.addEventListener("click", this.modelTagHandler);
@@ -288,7 +318,7 @@ export default {
   background: white;
 }
 .operation-container {
-  min-width: 800px;
+  min-width: 680px;
   display: flex;
   align-items: center;
 }

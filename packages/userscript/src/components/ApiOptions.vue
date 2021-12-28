@@ -39,7 +39,7 @@
 
 <script>
 import { state, handleCopyApi } from "@/state";
-import { retry, waitUntil } from "@/utils";
+import { retry, waitUntil, handleTimeoutError, scriptLog } from "@/utils";
 
 const createIdByHash = hash => {
   const arr = hash?.split("/") ?? [];
@@ -75,7 +75,12 @@ export default {
   methods: {
     handleCopyApi,
     async initOption() {
-      await waitUntil(() => state.options.length);
+      try {
+        await waitUntil(() => state.options.length);
+      } catch (error) {
+        handleTimeoutError(error);
+        return;
+      }
       const key = findKeyByHash(location.hash);
       const targetApi = new URL(location.href).searchParams.get("targetApi");
       const targetApiKey = findKeyByTargetApi(targetApi);

@@ -6,6 +6,10 @@ const cdnList = [
   "https://unpkg.com/prettier@2.2.1/parser-typescript.js"
 ];
 
+export function createAppContainer(mountElementId) {
+  document.body.appendChild(createDom("div", { id: mountElementId }));
+}
+
 export const start = (mountElementId, prepareFns = []) =>
   new Promise(async resolve => {
     document.body.appendChild(createDom("div", { id: mountElementId }));

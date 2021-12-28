@@ -27,20 +27,19 @@ export const retry = async ({
   });
 };
 
-export const waitUntil = (cb, time = 500, retryNumber = 10) =>
-  new Promise(async (resolve, reject) => {
-    const shouldEnd = await cb();
-    if (shouldEnd) {
-      resolve();
+export const waitUntil = async (cb, time = 500, retryNumber = 10) => {
+  const shouldEnd = await cb();
+  if (shouldEnd) {
+    return;
+  } else {
+    if (retryNumber < 0) {
+      return Promise.reject(new Error("timeout"));
+    } else {
+      await wait(time);
+      return waitUntil(cb, time, retryNumber - 1);
     }
-    if (shouldEnd || retryNumber < 0) {
-      reject("timeout");
-      return;
-    }
-    await wait(time);
-    await waitUntil(cb, time, retryNumber - 1);
-    resolve();
-  });
+  }
+};
 
 export const wait = async (time = 500) =>
   new Promise(resolve =>
@@ -48,3 +47,11 @@ export const wait = async (time = 500) =>
       resolve();
     }, time)
   );
+
+export function scriptLog(sth) {
+  console.log("xuece-user-script:", sth);
+}
+
+export function handleTimeoutError(error) {
+  scriptLog(error);
+}

@@ -4,16 +4,29 @@ import { copyMessage } from "@/utils/dom-utils";
 import { defaults, flattenDeep, groupBy } from "lodash-es";
 import {
   default as freeSwaggerCore,
-  jsTemplate,
+  // jsTemplate,
   tsTemplate,
   compileInterfaces,
   compileJsDocTypedefs
 } from "free-swagger-core";
 import { retry } from "@/utils";
 import { option, generate } from "json-schema-faker";
+import { jsTemplate as jsDefaultTemplate } from "@/utils/defaultTemplate";
 
 const STORAGE_KEY = "SWAGGER-USERSCRIPT";
 const SUCCESS_CODE = "200";
+
+function createDefaultCurrentApi() {
+  return {
+    key: "",
+    path: "",
+    method: "",
+    collection: {
+      controller: {},
+      operationId: ""
+    }
+  };
+}
 
 export const state = new Vue({
   data() {
@@ -21,19 +34,17 @@ export const state = new Vue({
       url: "",
       dialog: false,
       key: "",
-      currentApi: {
-        key: "",
-        path: "",
-        method: "",
-        collection: {
-          controller: {},
-          operationId: ""
-        }
+      basePath: "", // 用来区分当前是处于那个模块，通过监听来触发重置
+      currentApi: createDefaultCurrentApi(),
+      clearCurrent: () => {
+        location.hash = "";
+        this.key = "";
+        this.currentApi = createDefaultCurrentApi();
       },
       storage: {
-        jsTemplate,
+        jsTemplate: jsDefaultTemplate,
         tsTemplate,
-        jsDoc: true,
+        jsDoc: false,
         interface: false,
         typedef: false,
         recursive: false,
@@ -46,6 +57,9 @@ export const state = new Vue({
     };
   },
   computed: {
+    hasSelected() {
+      return Boolean(this.key);
+    },
     options() {
       if (!this.swagger) return [];
       const options = [];
