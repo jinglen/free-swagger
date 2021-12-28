@@ -1,7 +1,4 @@
 import { OpenAPIV2 } from 'openapi-types'
-import prettier from 'prettier/standalone'
-import parserTypescript from 'prettier/parser-typescript'
-import parserBabel from 'prettier/parser-babel'
 import { formatGenericInterface } from './parse/interface'
 import { normalizeDefinitionName } from './default'
 
@@ -192,14 +189,10 @@ const schemaToTsType = (
   }
 }
 
-const formatCode = (lang: 'ts' | 'js') => (code: string): string =>
-  prettier.format(code, {
-    plugins: [parserBabel, parserTypescript],
-    printWidth: 120,
-    tabWidth: 2,
-    parser: lang === 'ts' ? 'typescript' : 'babel',
-    trailingComma: 'none',
-  })
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const formatCode = (lang: 'ts' | 'js') => (code: string): string => {
+  return code;
+}
 
 export {
   formatCode,

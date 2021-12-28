@@ -4,7 +4,7 @@ import { OpenAPIV2 } from 'openapi-types'
 import { sortBy, uniq, flattenDeep, mapKeys, upperFirst } from 'lodash'
 import dayjs from 'dayjs'
 // @ts-ignore
-import Converter from 'api-spec-converter'
+// import Converter from 'api-spec-converter'
 
 export const createTagsByPaths = (
   paths: OpenAPIV2.PathsObject
@@ -42,13 +42,14 @@ export const normalizeSource = (source: OpenAPIV2.Document) => ({
 export const transformSource = async (source: OpenAPIV2.Document) => {
   // @ts-ignore
   if (source.openapi) {
-    return (
-      await Converter.convert({
-        from: 'openapi_3',
-        to: 'swagger_2',
-        source,
-      })
-    ).spec
+    return source;
+    // return (
+    //   await Converter.convert({
+    //     from: 'openapi_3',
+    //     to: 'swagger_2',
+    //     source,
+    //   })
+    // ).spec
   } else {
     return source
   }
