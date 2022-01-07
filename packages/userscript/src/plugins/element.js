@@ -13,6 +13,7 @@ import {
   Input,
   Tooltip,
   Switch,
+  Notification,
   Loading
 } from "element-ui";
 
@@ -30,3 +31,5 @@ Vue.use(Input);
 Vue.use(Tooltip);
 Vue.use(Switch);
 Vue.use(Loading);
+
+Vue.prototype.$notify = Notification;

@@ -51,6 +51,9 @@ export const state = new Vue({
         exportLanguage: "js",
         currentLanguage: "js"
       },
+      setStorage: () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.storage));
+      },
       isNewUi: null,
       swagger: null,
       parsedSwagger: null // 解析所有 ref 后的 swagger 对象
@@ -87,14 +90,7 @@ export const state = new Vue({
       return flattenDeep(Object.values(groupBy(options, o => o.tag)));
     }
   },
-  watch: {
-    storage: {
-      handler(newVal) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newVal));
-      },
-      deep: true
-    }
-  },
+
   created() {
     const storage = localStorage.getItem(STORAGE_KEY)
       ? JSON.parse(localStorage.getItem(STORAGE_KEY))

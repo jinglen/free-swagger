@@ -175,6 +175,7 @@ export default {
         this.form.tsTemplate = tsTemplate;
         this.instance?.setValue(tsTemplate);
       }
+      this.state.setStorage();
     },
     handleLink() {
       window.open("https://www.npmjs.com/package/free-swagger-core", "_blank");
@@ -182,6 +183,7 @@ export default {
     handleSubmit() {
       state.storage.jsTemplate = this.form.jsTemplate;
       state.storage.tsTemplate = this.form.tsTemplate;
+      this.state.setStorage();
       Message.success("保存成功");
       this.dialog = false;
     }

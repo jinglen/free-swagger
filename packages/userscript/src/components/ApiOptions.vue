@@ -1,45 +1,54 @@
 <template>
-  <el-select
-    class="search"
-    size="mini"
-    placeholder="请选择 api"
-    filterable
-    v-model="state.key"
-    @change="handleSearch"
-  >
-    <el-option
-      v-for="(item, index) in state.options"
-      :key="index"
-      :value="item.key"
-      @change="handleCopyApi()"
+  <div style="display: flex; flex: 1 1 auto; height: 100%;">
+    <el-select
+      class="search"
+      size="mini"
+      placeholder="请选择 api"
+      filterable
+      v-model="state.key"
+      @change="handleSearch"
     >
-      <div class="option-container">
-        <div
-          :class="[
-            'label',
-            {
-              'light-green': item.method === 'patch',
-              pink: item.method === 'options',
-              purple: item.method === 'head',
-              green: item.method === 'get',
-              blue: item.method === 'post',
-              yellow: item.method === 'put',
-              red: item.method === 'delete'
-            }
-          ]"
-        >
-          {{ item.method }}
-        </div>
-        <div class="path">{{ item.path }}</div>
-        <div class="summary">{{ item.collection.summary }}</div>
-      </div></el-option
-    >
-  </el-select>
+      <el-option
+        v-for="(item, index) in state.options"
+        :key="index"
+        :value="item.key"
+        @change="handleCopyApi()"
+      >
+        <div class="option-container">
+          <div
+            :class="[
+              'label',
+              {
+                'light-green': item.method === 'patch',
+                pink: item.method === 'options',
+                purple: item.method === 'head',
+                green: item.method === 'get',
+                blue: item.method === 'post',
+                yellow: item.method === 'put',
+                red: item.method === 'delete'
+              }
+            ]"
+          >
+            {{ item.method }}
+          </div>
+          <div class="path">{{ item.path }}</div>
+          <div class="summary">{{ item.collection.summary }}</div>
+        </div></el-option
+      >
+    </el-select>
+    <SelectApiModal
+      :visible.sync="selectModal.visible"
+      :options="selectModal.apiItems"
+      @search="selectModal.handleSearch($event)"
+    />
+  </div>
 </template>
 
 <script>
 import { state, handleCopyApi } from "@/state";
 import { retry, waitUntil, handleTimeoutError, scriptLog } from "@/utils";
+import { getMagicRgeExp } from "@/utils/findMagicApi";
+import SelectApiModal from "./SelectApiModal.vue";
 
 const createIdByHash = hash => {
   const arr = hash?.split("/") ?? [];
@@ -59,16 +68,38 @@ const findKeyByHash = hash => {
   return item?.key ?? "";
 };
 
-const findKeyByTargetApi = targetApi => {
-  const item = state.options.find(option => option.path === targetApi);
-  return item?.key ?? "";
+const findTargetApiItems = targetApi => {
+  const apiItems = state.options.filter(option => option.path === targetApi);
+  if (apiItems.length > 0) {
+    return { apiItems, magic: false };
+  } else {
+    const regexp = getMagicRgeExp(targetApi);
+    const apiItems = state.options.filter(option => regexp.test(option.path));
+    const magic = apiItems.length > 0;
+    return { apiItems, magic };
+  }
 };
 
 export default {
+  components: { SelectApiModal },
   name: "ApiOptions",
-  data: () => ({
-    state
-  }),
+  data() {
+    return {
+      state,
+      selectModal: {
+        visible: false,
+        apiItems: [],
+        show: apiItems => {
+          this.selectModal.apiItems = apiItems;
+          this.selectModal.visible = true;
+        },
+
+        handleSearch: key => {
+          this.handleSearch(key);
+        }
+      }
+    };
+  },
   mounted() {
     this.initOption();
   },
@@ -83,11 +114,31 @@ export default {
       }
       const key = findKeyByHash(location.hash);
       const targetApi = new URL(location.href).searchParams.get("targetApi");
-      const targetApiKey = findKeyByTargetApi(targetApi);
+      const { apiItems, magic } = findTargetApiItems(targetApi);
       if (key) {
         await this.handleSearch(key);
-      } else if (targetApiKey) {
-        await this.handleSearch(targetApiKey);
+      } else if (targetApi) {
+        if (apiItems.length > 0) {
+          if (magic) {
+            this.$notify.info({
+              title: "魔法 pathName",
+              message: `当前匹配结果为转换后的魔法 pathName. \n ${apiItems[0].path}`
+            });
+          }
+          await this.handleSearchApiItems(apiItems);
+        } else {
+          this.$notify.info({
+            title: "未找到 Api",
+            message: `${targetApi}`
+          });
+        }
+      }
+    },
+    async handleSearchApiItems(apiItems) {
+      if (apiItems.length === 1) {
+        await this.handleSearch(apiItems[0].key);
+      } else {
+        this.selectModal.show(apiItems);
       }
     },
     findControllerDom({ isNewUi, controller }) {
