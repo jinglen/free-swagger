@@ -37,8 +37,6 @@ var exp = (function() {
     .replaceAll("_", "\\_")
     .replace(/[0-9]{1,}/g, `\{${stand}}`)
     .replaceAll(stand, "w{1,}");
-  console.log("main的41行,into");
-  console.log(final);
 
   return new RegExp(final);
 })();
