@@ -118,6 +118,10 @@ export default {
       if (key) {
         await this.handleSearch(key);
       } else if (targetApi) {
+        // 使用过一次就不再使用
+        const url = new URL(location.href);
+        url.searchParams.delete("targetApi");
+        window.history.pushState({}, "", url.href);
         if (apiItems.length > 0) {
           if (magic) {
             this.$notify.info({
