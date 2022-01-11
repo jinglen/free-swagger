@@ -114,14 +114,15 @@ export default {
       }
       const key = findKeyByHash(location.hash);
       const targetApi = new URL(location.href).searchParams.get("targetApi");
-      const { apiItems, magic } = findTargetApiItems(targetApi);
       if (key) {
         await this.handleSearch(key);
       } else if (targetApi) {
-        // 使用过一次就不再使用
+        // 使用过一次就从历史记录中删除
         const url = new URL(location.href);
         url.searchParams.delete("targetApi");
         window.history.pushState({}, "", url.href);
+
+        const { apiItems, magic } = findTargetApiItems(targetApi);
         if (apiItems.length > 0) {
           if (magic) {
             this.$notify.info({
