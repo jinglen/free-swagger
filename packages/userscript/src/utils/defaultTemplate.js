@@ -117,7 +117,7 @@ export const jsTemplate = `({
     method: method.toUpperCase(),
     url: buildFinalUrl(url)
   }
-  const summaryString = \`/**\n * \${summary}\n */\n\`;
+  const summaryString = \`/** \${summary} */\n\`;
   const codeString = \`export const \${api.name} = params => service.axiosService(service.HTTP_TYPE.\${api.method}, '\${api.url}', params);\`;
   return summaryString + codeString;
 }`;
